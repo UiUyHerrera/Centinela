@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==75.8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "centinela"
+version = "1.0.0"
+description = "Analizador de amenazas para Windows: procesos, mineros, persistencia y cuarentena"
+requires-python = ">=3.11"
+dependencies = ["psutil==7.0.0"]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.5", "pyinstaller==6.12.0"]
+
+[project.gui-scripts]
+centinela = "centinela.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["centinela*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -6,10 +6,11 @@ from centinela.rules import RISKY_EXCLUSION_EXTENSIONS
 from centinela.scanners.indicators import Reason
 
 EXCLUSION_LABELS = {"path": "ruta", "process": "proceso", "extension": "extensión"}
+SETTING_LABELS = {"realtime": "protección en tiempo real", "tamper": "protección contra alteraciones"}
 
 
 def defender_target(kind: str, value: str) -> Target:
-    label = f"Exclusión de {EXCLUSION_LABELS[kind]}: {value}" if kind in EXCLUSION_LABELS else f"Defender: {kind}"
+    label = f"Exclusión de {EXCLUSION_LABELS[kind]}: {value}" if kind in EXCLUSION_LABELS else f"Defender: {SETTING_LABELS.get(kind, kind)}"
     return Target(
         kind=TargetKind.DEFENDER,
         identifier=f"{kind}:{value}",

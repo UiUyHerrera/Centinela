@@ -12,6 +12,8 @@ def quarantine_directory() -> Path:
 
 
 def print_report(engine: ScanEngine) -> None:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     report = engine.scan(lambda text: print(f"... {text}", file=sys.stderr))
     for threat in aggregate(report.findings):
         print(f"[{threat.severity.value.upper():5}] {threat.score:3}  {threat.target.kind.value:9} {threat.target.label}")

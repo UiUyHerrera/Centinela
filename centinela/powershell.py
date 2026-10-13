@@ -1,13 +1,15 @@
 import base64
 import json
+import os
 import subprocess
+import tempfile
 
 CREATE_NO_WINDOW = 0x08000000
 
 _PREAMBLE = """
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
-$payload = [Console]::In.ReadToEnd() | ConvertFrom-Json
+$payload = Get-Content -LiteralPath $env:CENTINELA_PAYLOAD -Raw -Encoding UTF8 | ConvertFrom-Json
 """
 
 _EPILOGUE = """
@@ -96,19 +98,24 @@ class PowerShellError(Exception):
 
 def run_powershell(script: str, payload: object = None, timeout: int = 300) -> list[dict]:
     encoded = base64.b64encode((_PREAMBLE + script + _EPILOGUE).encode("utf-16-le")).decode("ascii")
-    try:
-        completed = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encoded],
-            input=json.dumps(payload, ensure_ascii=True),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
-            creationflags=CREATE_NO_WINDOW,
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        raise PowerShellError(f"PowerShell no respondió: {error}") from error
+    with tempfile.TemporaryDirectory(prefix="centinela-") as directory:
+        payload_path = os.path.join(directory, "payload.json")
+        with open(payload_path, "w", encoding="utf-8") as payload_file:
+            json.dump(payload, payload_file, ensure_ascii=True)
+        try:
+            completed = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encoded],
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
+                creationflags=CREATE_NO_WINDOW,
+                env={**os.environ, "CENTINELA_PAYLOAD": payload_path},
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise PowerShellError(f"PowerShell no respondió: {error}") from error
     if completed.returncode != 0:
         raise PowerShellError(completed.stderr.strip().splitlines()[0] if completed.stderr.strip() else "PowerShell falló")
     output = completed.stdout.strip().lstrip("﻿")

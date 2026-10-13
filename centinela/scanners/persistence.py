@@ -48,7 +48,10 @@ def _autorun_reasons(
     if entry.mechanism in MECHANISM_REASONS:
         yield MECHANISM_REASONS[entry.mechanism]
 
-    if entry.target.detail("hidden") == "true":
+    files_trusted = bool(entry.target.files) and all(
+        signatures.get(normalize(path)) is SignatureState.VALID for path in entry.target.files
+    )
+    if entry.target.detail("hidden") == "true" and not files_trusted:
         yield "Tarea programada marcada como oculta", 20
 
     yield from command_reasons(entry.command)

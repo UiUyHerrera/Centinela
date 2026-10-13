@@ -48,7 +48,7 @@ def _snapshot(process: psutil.Process) -> ProcessSnapshot | None:
     except psutil.Error:
         cpu = 0.0
     info = process.info
-    exe = info.get("exe") or None
+    exe = info.get("exe") if info.get("exe") and ntpath.isabs(info["exe"]) else None
     return ProcessSnapshot(
         pid=info["pid"],
         ppid=info.get("ppid") or 0,
@@ -93,6 +93,8 @@ def collect_signatures(paths: list[str]) -> dict[str, SignatureState]:
     for start in range(0, len(paths), SIGNATURE_BATCH_SIZE):
         for item in powershell.run_powershell(powershell.SIGNATURES, paths[start:start + SIGNATURE_BATCH_SIZE]):
             states[normalize(item["path"])] = SIGNATURE_STATES.get(item.get("status"), SignatureState.UNKNOWN)
+    if paths and not states:
+        raise powershell.PowerShellError("la verificación de firmas no devolvió resultados")
     return states
 
 
@@ -172,7 +174,7 @@ def collect_services() -> list[AutorunEntry]:
     for service in psutil.win_service_iter():
         try:
             info = service.as_dict()
-        except psutil.Error:
+        except (psutil.Error, OSError):
             continue
         command = info.get("binpath") or ""
         target = Target(

@@ -42,6 +42,8 @@ def test_wmi_and_ifeo_mechanisms():
 def test_hidden_scheduled_task():
     task = autorun(r'"C:\ProgramData\svc\run.exe"', "task", TargetKind.TASK, [("hidden", "true")])
     assert "Tarea programada marcada como oculta" in reasons([task])
+    signed = {r"c:\programdata\svc\run.exe": SignatureState.VALID}
+    assert reasons([task], signed) == []
 
 
 def test_defender_settings():

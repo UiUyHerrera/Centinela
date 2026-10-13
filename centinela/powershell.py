@@ -96,6 +96,12 @@ class PowerShellError(Exception):
     pass
 
 
+def _child_environment(payload_path: str) -> dict[str, str]:
+    environment = {name: value for name, value in os.environ.items() if name.upper() != "PSMODULEPATH"}
+    environment["CENTINELA_PAYLOAD"] = payload_path
+    return environment
+
+
 def run_powershell(script: str, payload: object = None, timeout: int = 300) -> list[dict]:
     encoded = base64.b64encode((_PREAMBLE + script + _EPILOGUE).encode("utf-16-le")).decode("ascii")
     with tempfile.TemporaryDirectory(prefix="centinela-") as directory:
@@ -112,7 +118,7 @@ def run_powershell(script: str, payload: object = None, timeout: int = 300) -> l
                 errors="replace",
                 timeout=timeout,
                 creationflags=CREATE_NO_WINDOW,
-                env={**os.environ, "CENTINELA_PAYLOAD": payload_path},
+                env=_child_environment(payload_path),
             )
         except (OSError, subprocess.TimeoutExpired) as error:
             raise PowerShellError(f"PowerShell no respondió: {error}") from error

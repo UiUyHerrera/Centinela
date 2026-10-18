@@ -4,6 +4,10 @@ Analizador de amenazas para Windows. Revisa procesos, conexiones, persistencia, 
 
 Lo armé pensando en mineros de criptomonedas y en el malware común que se instala para arrancar con Windows.
 
+![Centinela con un informe: un minero disfrazado de svchost, una clave Run con PowerShell oculto y una exclusión de Defender](docs/centinela.png)
+
+<sub>La captura usa datos de demostración, no un escaneo real.</sub>
+
 ## Qué revisa
 
 - **Procesos**: binarios de sistema que corren desde carpetas del usuario, padres que no corresponden (un `svchost.exe` que no lanzó `services.exe`, o un PowerShell abierto por Word o por el navegador), nombres y argumentos típicos de mineros y abuso de PowerShell o de otros intérpretes de scripts.

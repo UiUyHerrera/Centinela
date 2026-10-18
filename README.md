@@ -1,43 +1,43 @@
 # Centinela
 
-Analizador de amenazas para Windows. Revisa procesos, conexiones, persistencia, Windows Defender y el archivo `hosts`, junta lo que encuentra por programa y le da un puntaje. Lo sospechoso se puede mandar a cuarentena y recuperar después.
+A threat analyzer for Windows. It checks processes, network connections, persistence, Windows Defender and the `hosts` file, groups what it finds by program and gives each one a score. Anything suspicious can be sent to quarantine and restored later.
 
-Lo armé pensando en mineros de criptomonedas y en el malware común que se instala para arrancar con Windows.
+I built it with crypto miners in mind, and the everyday malware that sets itself up to start with Windows.
 
-![Centinela con un informe: un minero disfrazado de svchost, una clave Run con PowerShell oculto y una exclusión de Defender](docs/centinela.png)
+![Centinela with a report: a miner disguised as svchost, a Run key with hidden PowerShell and a Defender exclusion](docs/centinela.png)
 
-<sub>La captura usa datos de demostración, no un escaneo real.</sub>
+<sub>The screenshot uses demo data, not a real scan. The interface is in Spanish.</sub>
 
-## Qué revisa
+## What it checks
 
-- **Procesos**: binarios de sistema que corren desde carpetas del usuario, padres que no corresponden (un `svchost.exe` que no lanzó `services.exe`, o un PowerShell abierto por Word o por el navegador), nombres y argumentos típicos de mineros y abuso de PowerShell o de otros intérpretes de scripts.
-- **Red**: conexiones a puertos que usan los pools de minería.
-- **Persistencia**: claves Run, Winlogon e IFEO del registro, carpetas de Inicio, tareas programadas, servicios y suscripciones WMI. La firma de cada ejecutable se verifica con PowerShell.
-- **Defender**: protección en tiempo real o contra alteraciones apagada, y exclusiones de carpetas, procesos o extensiones.
-- **hosts**: dominios de Microsoft, de antivirus o de GitHub redirigidos a otra parte.
-- **Modo vigilancia**: algunos mineros se frenan cuando abrís el Administrador de tareas. Centinela mide la CPU antes y después de abrir un monitor de procesos y marca a los que se cierran o se calman de golpe.
+- **Processes**: system binaries running from user folders, parents that don't fit (an `svchost.exe` not started by `services.exe`, or PowerShell opened by Word or the browser), miner names and arguments, and abuse of PowerShell or other script hosts.
+- **Network**: connections to ports used by mining pools.
+- **Persistence**: the Run, Winlogon and IFEO registry keys, Startup folders, scheduled tasks, services and WMI subscriptions. Each executable's signature is checked with PowerShell.
+- **Defender**: real-time or tamper protection turned off, and excluded folders, processes or extensions.
+- **hosts**: Microsoft, antivirus or GitHub domains redirected somewhere else.
+- **Watch mode**: some miners stop when you open Task Manager. Centinela measures CPU before and after a process monitor opens and flags the ones that quit or suddenly go quiet.
 
-Cada hallazgo suma puntos con su motivo y la suma decide la severidad del programa, así el informe muestra pocas entradas con el porqué de cada una en lugar de una lista larga de alertas sueltas.
+Every finding adds points along with its reason, and the total sets the program's severity. That way the report shows a few entries with the why behind each one, instead of a long list of loose alerts.
 
-## Usarlo
+## Using it
 
-Necesita Windows y Python 3.11 o más nuevo.
+It needs Windows and Python 3.11 or newer.
 
 ```bash
 pip install -e .[dev]
-centinela             # interfaz gráfica
-centinela --report    # informe en la consola
+centinela             # graphical interface
+centinela --report    # report in the console
 ```
 
-Para revisar servicios, tareas de otros usuarios y la cuarentena conviene correrlo como administrador. La cuarentena vive en `%ProgramData%\Centinela\cuarentena` y guarda lo necesario para restaurar cada archivo o valor de registro.
+Run it as administrator to check services, other users' tasks and the quarantine. The quarantine lives in `%ProgramData%\Centinela\cuarentena` and keeps what it needs to restore each file or registry value.
 
-## Ejecutable
+## Executable
 
 ```bash
 python build.py
 ```
 
-Arma `dist/Centinela.exe` con PyInstaller. GitHub Actions corre los tests y compila el ejecutable en Windows en cada push.
+Builds `dist/Centinela.exe` with PyInstaller. GitHub Actions runs the tests and builds the executable on Windows on every push.
 
 ## Tests
 
@@ -45,4 +45,4 @@ Arma `dist/Centinela.exe` con PyInstaller. GitHub Actions corre los tests y comp
 python -m pytest
 ```
 
-Los escáneres reciben los datos ya recolectados, así que los tests usan fábricas de procesos, conexiones y entradas de inicio falsas y no necesitan tocar el sistema real.
+The scanners take already-collected data, so the tests use factories of fake processes, connections and startup entries and never touch the real system.
